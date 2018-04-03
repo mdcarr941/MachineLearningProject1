@@ -1,20 +1,23 @@
-% An implementation of the OCE algorithm, used for cluster algorithm
-% evaluation.
+% An implementation of the Object Consistency Error (OCE) algorithm.
 %
 % Syntax: OCE = EvalClustRGB(CCIm, GrTruth)
 % 
 % Inputs:
-%     CCIm - A labeled image, i.e. an L by M by N array, where L is the
-%         number of labels.
-%     GrTruth - The ground truth segmentation, an M by N matrix with
-%         unsigned integer entries from 1 to L.
+%   CCIm - A labeled image, i.e. an L by M by N array, where L is the
+%       number of labels.
+%   GrTruth - The ground truth segmentation, an M by N matrix with
+%       unsigned integer entries from 1 to L. This code assumes that the
+%       class labels in GrTruth are sequential (every integer from 1 to
+%       L). If this assumption is violated, YMMV.
 %     
 % Output:
-%     OCE - A measure of how closely CCIm matches GrTruth. 0 <= OCE <= 1
+%   OCE - A measure of how closely CCIm matches GrTruth. 0 <= OCE <= 1
 %
 % Author: Matthew Carr
 
 function OCE = EvalClustRGB(CCIm, GrTruth)
+    % modify CCIm so that it is an M by N matrix, with entries equal to
+    % the class label of each pixel
     m = size(CCIm, 2);
     n = size(CCIm, 3);
     CCImMod = zeros(m, n);
@@ -23,6 +26,7 @@ function OCE = EvalClustRGB(CCIm, GrTruth)
         new(new == 1) = k;
         CCImMod = CCImMod + new;
     end
+    
     OCE = min(PartialError(CCImMod, GrTruth), PartialError(GrTruth, CCImMod));
 end
 
@@ -40,6 +44,7 @@ function err = PartialError(A, B)
         Wvec(j) = sum(sum(A == j));
     end
     Wvec = Wvec ./ sum(Wvec);
+    
     err = 0;
     for j = 1:M
         sub = 0;

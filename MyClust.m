@@ -1,4 +1,4 @@
-function [ClusterIm, CCim] = MyClust(Im, varargin)
+function [ClusterIm, CCIm] = MyClust(Im, varargin)
     Algorithm = '';
     ImType = '';
     NumClusts = -1;
