@@ -84,6 +84,9 @@ if (strcmp(ImType,'RGB'))
         index = clusterindex == i;
         CCIm(i, :) = index * 1;
     end
+    
+    % Reshape CCIm to the standard format.
+    CCIm = reshape(CCIm, NumClusts, nrows, ncols);
 
 elseif (strcmp(ImType, 'Hyper'))
     

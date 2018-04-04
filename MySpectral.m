@@ -20,7 +20,8 @@ function [ClusterIm, CCIm] = MySpectral(Im, ImType, NumClusts)
 if (strcmp(ImType,'RGB'))
     
     %resize image to speed up computation
-    Img = imresize(Im,[50 50]);
+    %Img = imresize(Im,[50 50]);
+    Img = imresize(Im, 0.15);
     %reshape into features
     [nrows, ncols, d] = size(Img);
     I = reshape(Img, 1, nrows * ncols, []);
@@ -67,21 +68,25 @@ if (strcmp(ImType,'RGB'))
     D    = sparse(1:size(W, 1), 1:size(W, 2), degs);
 
     % compute unnormalized Laplacian
-    L = D - W;
+    %L = D - W;
 
     % compute normalized Laplacian if needed
-            % avoid dividing by zero
-            degs(degs == 0) = eps;
-            % calculate inverse of D
-            D = spdiags(1./degs, 0, size(D, 1), size(D, 2));
+        % avoid dividing by zero
+        degs(degs == 0) = eps;
+        % calculate inverse of D
+        Dinv = spdiags(1./degs, 0, size(D, 1), size(D, 2));
 
-            % calculate normalized Laplacian
-            L = D * L;
+        % calculate normalized Laplacian
+        L = eye(size(D, 1)) - Dinv * W;
         
     % compute the eigenvectors corresponding to the k smallest
     % eigenvalues
     diff   = eps;
     [U, ~] = eigs(L, NumClusts, diff);
+    
+    % Because the normalized Laplacian may not be symmetric, we need to
+    % take the norm of U in case L has some complex eigenvalues.
+    U = abs(U);
 
     % now use the k-means algorithm to cluster U row-wise
     % C will be a n-by-1 matrix containing the cluster number for
@@ -113,6 +118,9 @@ if (strcmp(ImType,'RGB'))
         index = indMatrix == i;
         CCIm(i, :) = index * 1;
     end
+    
+    % Reshape CCIm to the standard format.
+    CCIm = reshape(CCIm, NumClusts, nrows, ncols);
     
 elseif (strcmp(ImType, 'Hyper'))
     

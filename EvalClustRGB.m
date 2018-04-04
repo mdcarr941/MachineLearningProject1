@@ -1,4 +1,4 @@
-% An implementation of the Object Consistency Error (OCE) algorithm.
+%% An implementation of the Object Consistency Error (OCE) algorithm.
 %
 % Syntax: OCE = EvalClustRGB(CCIm, GrTruth)
 % 
@@ -16,20 +16,21 @@
 % Author: Matthew Carr
 
 function OCE = EvalClustRGB(CCIm, GrTruth)
-    % modify CCIm so that it is an M by N matrix, with entries equal to
-    % the class label of each pixel
-    m = size(CCIm, 2);
-    n = size(CCIm, 3);
-    CCImMod = zeros(m, n);
-    for k = 1:size(CCIm, 1)
-        new = squeeze(CCIm(k,:,:));
-        new(new == 1) = k;
-        CCImMod = CCImMod + new;
+    % If CCIm has more than 2 dimensions, convert it to a labeled image.
+    if (length(size(CCIm)) > 2)
+        CCIm = Deflate(CCIm);
     end
     
-    OCE = min(PartialError(CCImMod, GrTruth), PartialError(GrTruth, CCImMod));
+    % Resample the ground truth if it does not have the same size as CCIm.
+    CCImSz = size(CCIm);
+    if any(CCImSz ~= size(GrTruth))
+        GrTruth = imresize(GrTruth, CCImSz);
+    end
+    
+    OCE = min(PartialError(CCIm, GrTruth), PartialError(GrTruth, CCIm));
 end
 
+%% Calculate the partial error between two labeled images.
 function err = PartialError(A, B)
     M = length(unique(A));
     N = length(unique(B));
@@ -40,10 +41,10 @@ function err = PartialError(A, B)
             if ~any(any(A == j & B == i)), continue, end
             W(j, i) = sum(sum(B == i));
         end
-        W(j,:) = W(j,:) ./ sum(W(j,:));
+        W(j,:) = W(j,:) ./ (sum(W(j,:)) + eps);
         Wvec(j) = sum(sum(A == j));
     end
-    Wvec = Wvec ./ sum(Wvec);
+    Wvec = Wvec ./ (sum(Wvec) + eps);
     
     err = 0;
     for j = 1:M
