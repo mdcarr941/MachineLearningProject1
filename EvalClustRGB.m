@@ -51,7 +51,7 @@ function err = PartialError(A, B)
         sub = 0;
         for i = 1:N
             sub = sub + sum(sum(A == j & B == i)) ...
-                      / sum(sum(A == j | B == i)) * W(j,i);
+                      / (sum(sum(A == j | B == i)) + eps) * W(j,i);
         end
         err = err + (1 - sub) * Wvec(j);
     end
